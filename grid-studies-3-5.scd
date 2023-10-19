@@ -3,11 +3,11 @@ Server.default = Server.local;
 
 SynthDef(\singrain, { |freq = 440, amp = 0.2, sustain = 1|
 	var sig;
-	sig = SinOsc.ar(freq * 0.5 * SinOsc.ar(freq * 2, Saw.kr(Rand(1, 30).range(-2pi, 2pi)), Rand(0.5, 100), 0, amp)) * EnvGen.kr(Env.perc(0.01, sustain* Rand(0.5,30.5)), doneAction: 2);
+	sig = SinOsc.ar(freq, 0, amp) * EnvGen.kr(Env.perc(0.01, sustain), doneAction: 2);
 	Out.ar(0, sig ! 2);    // sig ! 2 is the same as [sig, sig]
 }).add;
 
-~m = MonomeGrid.new(rotation: 180);
+~m = MonomeGrid.new();
 
 s.waitForBoot({
 
@@ -68,11 +68,7 @@ s.waitForBoot({
 						~loop_end = x;
 					},
 					{
-						"negative loop".postln;
 						// exercise: define what should happen if the loop is negative!
-						~loop_start = ~keys_held;
-						~loop_end = ~play_position;
-
 					}
 				);
 				("start: " ++ ~loop_start ++ " // end: " ++ ~loop_end).postln;

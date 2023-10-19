@@ -1,11 +1,21 @@
 (
 Server.default = Server.local;
 
+~soundPaths = "/media/numina/Datapanic/Dropbox/Samples/FieldRecordings/microsounds/*.aiff".pathMatch;
+~samples = ~soundPaths.collect{|i| Buffer.read(s, i); };
+
+
 SynthDef(\singrain, { |freq = 440, amp = 0.2, sustain = 1|
 	var sig;
 	sig = SinOsc.ar(freq * 0.5 * SinOsc.ar(freq * 2, Saw.kr(Rand(1, 30).range(-2pi, 2pi)), Rand(0.5, 100), 0, amp)) * EnvGen.kr(Env.perc(0.01, sustain* Rand(0.5,30.5)), doneAction: 2);
 	Out.ar(0, sig ! 2);    // sig ! 2 is the same as [sig, sig]
 }).add;
+
+
+SynthDef(\monome_sampler, {|freq amp=0.2 bufnum sustain 1|
+	var sig;
+	sig = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum) * (freq / 440), 1, 0, loop: 1) * EnvGen.ar(Env.perc(0.001, sustain), doneAction: 2);
+	Out.ar(0, sig!2 ); }).add;
 
 ~m = MonomeGrid.new(rotation: 180);
 
@@ -30,6 +40,7 @@ s.waitForBoot({
 	~cutting = 0;
 	~lastCol = cols-1;
 	~lastRow = rows-1;
+	~interval = 0.125
 
 	~keys_held = 0;
 	~key_last = 0;
@@ -70,7 +81,7 @@ s.waitForBoot({
 					{
 						"negative loop".postln;
 						// exercise: define what should happen if the loop is negative!
-						~loop_start = ~keys_held;
+						~loop_start = ~play_position;
 						~loop_end = ~play_position;
 
 					}
@@ -130,7 +141,8 @@ s.waitForBoot({
 			for(0,~lastRow-2, {arg t;
 				if(~step[(t*16) + ~play_position] == 1,
 					{
-						Synth(\singrain, [
+						Synth(\monome_sampler, [
+							bufnum: ~samples.choose,
 							freq: (5-t)*100+300,
 							amp: rrand(0.1, 0.5),
 							sustain: interval * 0.8
