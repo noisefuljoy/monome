@@ -1,10 +1,14 @@
+Server.default.makeGui
 
+thisProcess.platform.recordingsDir = "/home/numina/Music";
+
+thisProcess.platform.recordingsDir
 (
 
 Server.default = Server.local;
 
 
-SynthDef(\bufamp, {|out=0 bufnum amp=0.5 modrate=1 relBus posBus rateBus gate=1|
+SynthDef(\bufamp, {|out=0 bufnum amp=0.5 pan=0 modrate=1 relBus posBus rateBus gate=1|
 	var env, sig, rel, rate, pos;
 	rel = In.kr(relBus, 1);
 	rate = In.kr(rateBus, 1);
@@ -12,13 +16,12 @@ SynthDef(\bufamp, {|out=0 bufnum amp=0.5 modrate=1 relBus posBus rateBus gate=1|
 	env = EnvGen.ar(Env.perc(0.001,rel),gate, doneAction: 2);
 	//sig = BufRd.ar(1, bufnum, SinOsc.ar(modrate) * BufFrames.ir(bufnum), 1);
 	sig = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum)*rate,1, pos *BufFrames.kr(bufnum), loop: 1);
-	Out.ar(out, sig*env*amp!2); }).add;
+	Out.ar(out, Pan2.ar(sig*env*amp, pan )); }).add;
 
 ~relBus = Bus.control(s, 1).set(2);
 ~posBus = Bus.control(s, 1).set(0);
 ~rateBus = Bus.control(s, 1).set(1);
 ~seq_intBus = Bus.control(s, 1).set(0.125);
-
 
 ~releaseVar = 2;
 
@@ -114,12 +117,14 @@ s.waitForBoot({
 	~seq_int = 0.125;
 
 	~tempoBus = Bus.control(s, 1).set(1);
+
 	~tempo = 1;
+
 	{ Out.kr(~tempoBus, LFNoise0.kr(3.2).range(0.01, 13)); }.play;
 
 	~tempoRoutine = Routine({inf.do{
 		~tempoBus.get{|i| ~tempo = i; };
-		~tempo.postln;
+		//~tempo.postln;
 		~clock.tempo_(~tempo);
 		0.1.wait; }; }).play;
 
@@ -177,7 +182,7 @@ s.waitForBoot({
 
 			~play_pos = ( ~play_pos + 1 ).wrap(0, ~lastCol);
 
-			for(0, 3, {arg t; t.postln;
+			for(0, 3, {arg t;
 
 				if (~step[(t*16) + ~play_pos] == 1,
 
@@ -192,6 +197,7 @@ s.waitForBoot({
 						{ t == 0 } { "0".postln;
 							~synth_arr.put( (t*16) + ~play_pos,
 							Synth(\bufamp,[\bufnum, ~print_samples[0],
+									\pan, -0.8,
 									\amp, 0.5,
 							        \rateBus, ~rateBus.index,
 									\relBus, ~relBus.index,
@@ -201,6 +207,7 @@ s.waitForBoot({
 						{
 							~synth_arr.put( (t*16) + ~play_pos,
 							Synth(\bufamp,[\bufnum, ~print_samples[1],
+									\pan, -0.25,
 									\amp, 0.5,
 							        \rateBus, ~rateBus.index,
 									\relBus, ~relBus.index,
@@ -209,6 +216,7 @@ s.waitForBoot({
 						{ t == 2 } {
 							~synth_arr.put( (t*16) + ~play_pos,
 							Synth(\bufamp,[\bufnum, ~type_samples[0],
+									\pan, 0.25,
 									\amp, 0.5,
 							        \rateBus, ~rateBus.index,
 									\relBus, ~relBus.index,
@@ -218,6 +226,7 @@ s.waitForBoot({
 						{
 							~synth_arr.put( (t*16) + ~play_pos,
 							Synth(\bufamp,[\bufnum, ~type_samples[1],
+									\pan, 0.8,
 									\amp, 0.5,
 							        \rateBus, ~rateBus.index,
 									\relBus, ~relBus.index,
